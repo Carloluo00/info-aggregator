@@ -14,12 +14,12 @@ class Settings:
     poll_interval_seconds: int
     rss_urls: list[str]
     sqlite_path: Path
+    max_push_per_cycle: int
+    summary_when_exceed: bool
 
 
 def _parse_rss_urls(raw: str) -> list[str]:
     urls = [item.strip() for item in raw.split(",") if item.strip()]
-    if not urls:
-        raise ValueError("RSS_URLS must contain at least one URL")
     return urls
 
 
@@ -43,6 +43,20 @@ def load_settings(dotenv_path: str | None = None) -> Settings:
     rss_urls = _parse_rss_urls(os.getenv("RSS_URLS", ""))
 
     sqlite_path = Path(os.getenv("SQLITE_PATH", "data/app.db")).expanduser()
+    max_push_raw = os.getenv("MAX_PUSH_PER_CYCLE", "5").strip()
+    try:
+        max_push_per_cycle = int(max_push_raw)
+    except ValueError as exc:
+        raise ValueError("MAX_PUSH_PER_CYCLE must be an integer") from exc
+    if max_push_per_cycle <= 0:
+        raise ValueError("MAX_PUSH_PER_CYCLE must be greater than 0")
+
+    summary_when_exceed = os.getenv("SUMMARY_WHEN_EXCEED", "true").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
 
     return Settings(
         feishu_webhook_url=webhook,
@@ -50,4 +64,6 @@ def load_settings(dotenv_path: str | None = None) -> Settings:
         poll_interval_seconds=interval,
         rss_urls=rss_urls,
         sqlite_path=sqlite_path,
+        max_push_per_cycle=max_push_per_cycle,
+        summary_when_exceed=summary_when_exceed,
     )

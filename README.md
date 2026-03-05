@@ -1,18 +1,17 @@
-# 信息源整合工具（MVP）
+# Info Aggregator V1
 
-一个基于 Python 的资讯整合脚本：定时抓取 RSS，去重后推送到飞书机器人。
+本项目用于聚合 RSS 和静态网页资讯，并推送到飞书。
 
-## 1. 功能
-- 支持多个 RSS 源抓取
-- SQLite 去重，避免重复推送
-- 飞书 Webhook 推送
-- 支持 `--once` 单次运行与定时轮询
+## 功能
+- 本地管理面板（FastAPI + Jinja）
+  - `/sources`：查看、启停、删除信息源
+  - `/sources/new`：新增 RSS / Web 源
+  - `/settings`：设置每轮推送上限和摘要策略
+- 统一信息源存储在 SQLite `sources` 表
+- 网页抓取支持静态列表页 + CSS 选择器
+- 推送节流：每轮最多推送 N 条，超出发送摘要
 
-## 2. 环境要求
-- Python 3.11+
-- Windows / macOS / Linux
-
-## 3. 安装
+## 安装
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
@@ -20,17 +19,21 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-## 4. 配置
-复制 `.env.example` 为 `.env`，并填写：
+## 配置
+```powershell
+Copy-Item .env.example .env
+```
 
-- `FEISHU_WEBHOOK_URL`：飞书自定义机器人 webhook
-- `FEISHU_BOT_SECRET`：可选（MVP 当前未启用签名）
-- `POLL_INTERVAL_SECONDS`：轮询间隔（秒）
-- `RSS_URLS`：逗号分隔的 RSS 地址
-- `SQLITE_PATH`：本地数据库路径（默认 `data/app.db`）
+核心变量：
+- `FEISHU_WEBHOOK_URL`：飞书机器人 webhook
+- `POLL_INTERVAL_SECONDS`：轮询间隔
+- `SQLITE_PATH`：数据库路径
+- `MAX_PUSH_PER_CYCLE`：每轮最多推送条数（默认 5）
+- `SUMMARY_WHEN_EXCEED`：超限时是否发送摘要（默认 true）
+- `RSS_URLS`：仅用于首次迁移到 `sources` 表
 
-## 5. 运行
-单次执行（推荐先验证）：
+## 运行
+单次运行：
 ```powershell
 python -m app.main --once
 ```
@@ -40,22 +43,39 @@ python -m app.main --once
 python -m app.main
 ```
 
-## 6. 测试
-按模块测试：
+启动管理面板（默认 `127.0.0.1:8000`）：
 ```powershell
-python -m pytest tests/test_config.py -q -p no:cacheprovider
-python -m pytest tests/test_db.py -q -p no:cacheprovider
-python -m pytest tests/test_rss_fetcher.py -q -p no:cacheprovider
-python -m pytest tests/test_feishu.py -q -p no:cacheprovider
-python -m pytest tests/test_jobs.py -q -p no:cacheprovider
+python -m app.main --admin
 ```
 
-全量测试：
+指定面板端口：
+```powershell
+python -m app.main --admin --admin-port 8011
+```
+
+## 网页抓取规则
+在新增 `web` 类型源时填写：
+- `item_selector`：每条内容的容器选择器
+- `title_selector`：标题节点选择器
+- `link_selector`：链接节点选择器（需能取到 `href`）
+- `published_selector`：可选，发布时间节点
+
+示例：
+- item: `.post`
+- title: `.title`
+- link: `a`
+- published: `.date`
+
+## 测试
 ```powershell
 python -m pytest tests -q -p no:cacheprovider
 ```
 
-## 7. 下一步建议
-- 为飞书机器人加签名（timestamp + sign）
-- 增加关键词过滤（白名单/黑名单）
-- 增加网页抓取兜底源（无 RSS 场景）
+## 常见问题
+- `Admin mode requires uvicorn and fastapi installed`
+  - 先执行 `pip install -r requirements.txt`
+- 网页源无结果
+  - 先用浏览器开发者工具验证 CSS 选择器是否匹配到节点
+  - 检查链接是否在 `href` 属性中
+- 一次推送过多
+  - 在 `/settings` 中降低 `max_push_per_cycle`

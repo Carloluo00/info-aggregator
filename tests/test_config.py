@@ -12,6 +12,8 @@ def test_load_settings_success(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("POLL_INTERVAL_SECONDS", "120")
     monkeypatch.setenv("RSS_URLS", "https://a.com/feed,https://b.com/rss.xml")
     monkeypatch.setenv("SQLITE_PATH", "data/test.db")
+    monkeypatch.setenv("MAX_PUSH_PER_CYCLE", "7")
+    monkeypatch.setenv("SUMMARY_WHEN_EXCEED", "false")
 
     settings = load_settings(None)
 
@@ -20,6 +22,8 @@ def test_load_settings_success(monkeypatch: pytest.MonkeyPatch) -> None:
     assert settings.poll_interval_seconds == 120
     assert settings.rss_urls == ["https://a.com/feed", "https://b.com/rss.xml"]
     assert str(settings.sqlite_path).replace("\\", "/") == "data/test.db"
+    assert settings.max_push_per_cycle == 7
+    assert settings.summary_when_exceed is False
 
 
 def test_load_settings_requires_valid_webhook(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -33,6 +37,5 @@ def test_load_settings_requires_valid_webhook(monkeypatch: pytest.MonkeyPatch) -
 def test_load_settings_requires_rss_urls(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("FEISHU_WEBHOOK_URL", "https://open.feishu.cn/hook/token")
     monkeypatch.setenv("RSS_URLS", "")
-
-    with pytest.raises(ValueError, match="RSS_URLS"):
-        load_settings(None)
+    settings = load_settings(None)
+    assert settings.rss_urls == []

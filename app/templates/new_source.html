@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>New Source</title>
+  <style>
+    body { font-family: "Segoe UI", sans-serif; margin: 24px; background: #f5f7fb; color: #1f2937; }
+    form { background: #fff; padding: 16px; border: 1px solid #d1d5db; max-width: 720px; }
+    label { display: block; margin: 10px 0 4px; }
+    input, select { width: 100%; padding: 8px; box-sizing: border-box; }
+    .row { margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <p><a href="/sources">Back to sources</a></p>
+  {% if error %}
+  <p style="color: #b91c1c;">Invalid input. Check fields and try again.</p>
+  {% endif %}
+  <form method="post" action="/sources/new">
+    <div class="row">
+      <label>Name</label>
+      <input name="source_name" required>
+    </div>
+    <div class="row">
+      <label>Type</label>
+      <select name="source_type">
+        <option value="rss">rss</option>
+        <option value="web">web</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>URL</label>
+      <input name="source_url" required>
+    </div>
+    <div class="row">
+      <label>Enabled</label>
+      <select name="source_enabled">
+        <option value="1">Yes</option>
+        <option value="0">No</option>
+      </select>
+    </div>
+    <div class="row">
+      <label>Fetch interval seconds (optional)</label>
+      <input name="fetch_interval_seconds">
+    </div>
+
+    <h3>Web selectors (required for web type)</h3>
+    <div class="row">
+      <label>item_selector</label>
+      <input name="item_selector" placeholder=".post-item">
+    </div>
+    <div class="row">
+      <label>title_selector</label>
+      <input name="title_selector" placeholder=".title">
+    </div>
+    <div class="row">
+      <label>link_selector</label>
+      <input name="link_selector" placeholder="a">
+    </div>
+    <div class="row">
+      <label>published_selector (optional)</label>
+      <input name="published_selector" placeholder=".date">
+    </div>
+
+    <button type="submit">Create</button>
+  </form>
+</body>
+</html>

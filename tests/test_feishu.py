@@ -69,3 +69,17 @@ def test_send_news_network_error(monkeypatch) -> None:
     monkeypatch.setattr("app.notifier.feishu.requests.post", _raise)
 
     assert notifier.send_news(_build_item()) is False
+
+
+def test_send_summary_success(monkeypatch) -> None:
+    notifier = FeishuNotifier("https://open.feishu.cn/open-apis/bot/v2/hook/token")
+    captured = {}
+
+    def _mock_post(url: str, json: dict, timeout: int):
+        captured["payload"] = json
+        return _MockResponse({"code": 0})
+
+    monkeypatch.setattr("app.notifier.feishu.requests.post", _mock_post)
+    ok = notifier.send_summary(total_pending=8, sent_count=5, items=[_build_item()])
+    assert ok is True
+    assert "本轮抓到" in captured["payload"]["content"]["text"]

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sources</title>
+  <style>
+    body { font-family: "Segoe UI", sans-serif; margin: 24px; background: #f5f7fb; color: #1f2937; }
+    a, button { font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    th, td { border: 1px solid #d1d5db; padding: 8px; text-align: left; vertical-align: top; }
+    .actions { display: flex; gap: 8px; align-items: center; }
+    .top { margin-bottom: 16px; display: flex; gap: 12px; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <a href="/sources/new">Add Source</a>
+    <a href="/settings">Settings</a>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Type</th>
+        <th>URL</th>
+        <th>Enabled</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for source in sources %}
+      <tr>
+        <td>{{ source.id }}</td>
+        <td>{{ source.name }}</td>
+        <td>{{ source.source_type }}</td>
+        <td>{{ source.url }}</td>
+        <td>{{ "Yes" if source.enabled else "No" }}</td>
+        <td class="actions">
+          <form method="post" action="/sources/{{ source.id }}/toggle">
+            <input type="hidden" name="enabled" value="{{ '0' if source.enabled else '1' }}">
+            <button type="submit">{{ "Disable" if source.enabled else "Enable" }}</button>
+          </form>
+          <form method="post" action="/sources/{{ source.id }}/delete">
+            <button type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
